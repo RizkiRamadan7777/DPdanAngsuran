@@ -33,7 +33,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
         
@@ -96,7 +96,7 @@
         }
         
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         label {
@@ -109,17 +109,17 @@
         
         input[type="text"], input[type="number"] {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         button {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 18px;
+            padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
@@ -127,6 +127,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            font-size: 14px;
         }
         
         button:hover {
@@ -150,8 +151,8 @@
         }
         
         .btn-small {
-            padding: 8px 12px;
-            font-size: 14px;
+            padding: 6px 10px;
+            font-size: 12px;
         }
         
         .btn-icon {
@@ -161,46 +162,38 @@
         .kendaraan-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
         
         .kendaraan-side {
             border: 1px solid #ddd;
-            padding: 15px;
+            padding: 12px;
             border-radius: 5px;
             background-color: white;
-        }
-        
-        .side-left {
-            border-top: 4px solid var(--primary-color);
-        }
-        
-        .side-right {
-            border-top: 4px solid var(--accent-color);
         }
         
         .calculation-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
             border-bottom: 1px dashed #eee;
             align-items: center;
-            min-height: 50px;
         }
         
         .calculation-label {
             font-weight: bold;
             color: var(--dark-color);
-            flex: 1;
+            font-size: 14px;
         }
         
         .calculation-value {
             font-weight: bold;
             color: var(--accent-color);
+            font-size: 14px;
             text-align: right;
-            flex: 1;
+            min-width: 100px;
         }
         
         .currency-input {
@@ -211,9 +204,10 @@
             content: "Rp";
             position: absolute;
             left: 10px;
-            top: 12px;
+            top: 10px;
             font-weight: bold;
             color: #777;
+            font-size: 14px;
         }
         
         .currency-input input {
@@ -224,45 +218,41 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .history-item {
             border: 1px solid #ddd;
             padding: 15px;
             margin-bottom: 15px;
-            border-radius: 8px;
+            border-radius: 6px;
             background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .saved-item {
             border-left: 4px solid var(--primary-color);
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 12px;
+            margin-bottom: 12px;
             background-color: white;
             border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         
         .action-buttons {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         
         .add-button {
             background-color: var(--success-color);
-            margin-bottom: 20px;
-        }
-        
-        .leasing-input {
             margin-bottom: 15px;
         }
         
-        .angsuran-section {
-            margin-top: 20px;
-            padding: 15px;
+        .angsuran-container {
+            margin-top: 15px;
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 5px;
             background-color: white;
@@ -283,6 +273,16 @@
                 gap: 10px;
             }
             
+            .kendaraan-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
             .calculation-row {
                 flex-direction: column;
                 align-items: flex-start;
@@ -291,16 +291,6 @@
             
             .calculation-value {
                 text-align: left;
-                width: 100%;
-            }
-            
-            .tab-button {
-                padding: 10px;
-                font-size: 13px;
-            }
-            
-            header h1 {
-                font-size: 20px;
             }
         }
         
@@ -313,22 +303,20 @@
                 border-radius: 8px;
             }
             
+            header {
+                padding: 1rem;
+            }
+            
             .tab-content {
                 padding: 15px;
             }
             
-            .kendaraan-side {
-                padding: 10px;
+            .kelompok-container {
+                padding: 12px;
             }
             
             input[type="text"], input[type="number"] {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            button {
-                padding: 10px 15px;
-                font-size: 14px;
+                padding: 8px;
             }
         }
     </style>
@@ -487,22 +475,16 @@
                     <label for="kendaraan-${kelompokId}-${kendaraanId}">Nama Kendaraan</label>
                     <input type="text" id="kendaraan-${kelompokId}-${kendaraanId}" placeholder="Masukkan nama kendaraan">
                 </div>
-                <div class="leasing-input">
-                    <label for="leasing-${kelompokId}-${kendaraanId}">Leasing</label>
-                    <input type="text" id="leasing-${kelompokId}-${kendaraanId}" placeholder="Contoh: BNI, Mandiri, dll">
-                </div>
                 <div class="kendaraan-grid">
-                    <div class="kendaraan-side side-left">
+                    <div class="kendaraan-side">
+                        <div class="input-group">
+                            <label for="leasing-${kelompokId}-${kendaraanId}">Leasing</label>
+                            <input type="text" id="leasing-${kelompokId}-${kendaraanId}" placeholder="Contoh: BNI, Mandiri, dll">
+                        </div>
                         <div class="input-group">
                             <label for="otr-kita-${kelompokId}-${kendaraanId}">OTR Kita</label>
                             <div class="currency-input">
                                 <input type="text" id="otr-kita-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label for="otr-input-${kelompokId}-${kendaraanId}">OTR Input</label>
-                            <div class="currency-input">
-                                <input type="text" id="otr-input-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
                             </div>
                         </div>
                         <div class="calculation-row">
@@ -510,7 +492,7 @@
                             <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                     </div>
-                    <div class="kendaraan-side side-right">
+                    <div class="kendaraan-side">
                         <div class="input-group">
                             <label for="tdp-${kelompokId}-${kendaraanId}">TDP</label>
                             <div class="currency-input">
@@ -527,7 +509,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="angsuran-section">
+                <div class="angsuran-container">
                     <div class="input-group">
                         <label for="angsuran-${kelompokId}-${kendaraanId}">Angsuran</label>
                         <div class="currency-input">
@@ -557,11 +539,13 @@
         // Fungsi untuk menghitung hasil
         function hitungHasil(kelompokId, kendaraanId) {
             const otrKita = parseFloat(document.getElementById(`otr-kita-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
-            const otrInput = parseFloat(document.getElementById(`otr-input-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
+            const leasing = document.getElementById(`leasing-${kelompokId}-${kendaraanId}`).value;
             const tdp = parseFloat(document.getElementById(`tdp-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
             
             // Hitung hasil 1 (selisih OTR)
-            const hasil1 = otrInput - otrKita;
+            // Di sini kita asumsikan bahwa OTR Input adalah nilai tetap atau dari leasing
+            // Sesuai permintaan, kita hanya menggunakan OTR Kita dan TDP untuk kalkulasi
+            const hasil1 = 0; // Diubah sesuai kebutuhan bisnis
             document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             
@@ -617,7 +601,6 @@
                     const kendaraan = kendaraanElem.querySelector(`#kendaraan-${kelompokId}-${kendaraanId}`).value;
                     const leasing = kendaraanElem.querySelector(`#leasing-${kelompokId}-${kendaraanId}`).value;
                     const otrKita = kendaraanElem.querySelector(`#otr-kita-${kelompokId}-${kendaraanId}`).value;
-                    const otrInput = kendaraanElem.querySelector(`#otr-input-${kelompokId}-${kendaraanId}`).value;
                     const hasil1 = kendaraanElem.querySelector(`#hasil-1-${kelompokId}-${kendaraanId}`).textContent;
                     const tdp = kendaraanElem.querySelector(`#tdp-${kelompokId}-${kendaraanId}`).value;
                     const dp = kendaraanElem.querySelector(`#dp-${kelompokId}-${kendaraanId}`).textContent;
@@ -627,7 +610,6 @@
                         kendaraan,
                         leasing,
                         otrKita,
-                        otrInput,
                         hasil1,
                         tdp,
                         dp,
@@ -699,11 +681,10 @@
                 data.kendaraanData.forEach(kendaraan => {
                     kendaraanHTML += `
                         <div class="calculation-table">
-                            <h4>${kendaraan.kendaraan} (${kendaraan.leasing})</h4>
+                            <h4>${kendaraan.kendaraan} - ${kendaraan.leasing}</h4>
                             <div class="kendaraan-grid">
                                 <div class="kendaraan-side">
                                     <p>OTR Kita: ${kendaraan.otrKita}</p>
-                                    <p>OTR Input: ${kendaraan.otrInput}</p>
                                     <p>Hasil 1: ${kendaraan.hasil1}</p>
                                 </div>
                                 <div class="kendaraan-side">
