@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator DP dan Angsuran Kendaraan</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #3498db;
@@ -314,6 +316,27 @@
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .detail-side {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
         }
         
         @media (max-width: 768px) {
@@ -325,7 +348,7 @@
                 min-width: 100%;
             }
             
-            .kendaraan-grid {
+            .kendaraan-grid, .detail-grid {
                 grid-template-columns: 1fr;
             }
             
@@ -354,6 +377,10 @@
             .modal-content {
                 margin: 20px 10px;
                 padding: 15px;
+            }
+            
+            .modal-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -401,6 +428,9 @@
             <div id="detail-content" class="detail-content">
                 <!-- Detail data akan ditampilkan di sini -->
             </div>
+            <div class="modal-actions">
+                <button id="export-pdf" class="btn-success">Export ke PDF</button>
+            </div>
         </div>
     </div>
 
@@ -408,6 +438,7 @@
         // Variabel global
         let kelompokCount = 0;
         let kendaraanCount = {};
+        let currentDetailData = null;
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -447,6 +478,9 @@
             document.querySelector('.close-modal').addEventListener('click', function() {
                 document.getElementById('detailModal').style.display = 'none';
             });
+            
+            // Event listener untuk export PDF
+            document.getElementById('export-pdf').addEventListener('click', exportToPDF);
             
             // Tutup modal ketika klik di luar konten modal
             window.addEventListener('click', function(event) {
@@ -542,25 +576,25 @@
                     <input type="text" id="kendaraan-${kelompokId}-${kendaraanId}" placeholder="Masukkan nama kendaraan">
                 </div>
                 <div class="input-group">
-                    <label for="leasing-${kelompokId}-${kendaraanId}">Leasing (OTR Input)</label>
+                    <label for="leasing-${kelompokId}-${kendaraanId}">Leasing</label>
                     <input type="text" id="leasing-${kelompokId}-${kendaraanId}" placeholder="Contoh: Bank BNI, Mandiri, dll">
                 </div>
                 <div class="kendaraan-grid">
                     <div class="kendaraan-side side-left">
+                        <div class="input-group">
+                            <label for="otr-leasing-${kelompokId}-${kendaraanId}">OTR Leasing</label>
+                            <div class="currency-input">
+                                <input type="text" id="otr-leasing-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
+                            </div>
+                        </div>
                         <div class="input-group">
                             <label for="otr-kita-${kelompokId}-${kendaraanId}">OTR Kita</label>
                             <div class="currency-input">
                                 <input type="text" id="otr-kita-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
                             </div>
                         </div>
-                        <div class="input-group">
-                            <label for="otr-input-${kelompokId}-${kendaraanId}">OTR Input</label>
-                            <div class="currency-input">
-                                <input type="text" id="otr-input-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
-                            </div>
-                        </div>
                         <div class="calculation-row">
-                            <span class="calculation-label">Hasil 1</span>
+                            <span class="calculation-label">Hasil 1 (OTR Leasing - OTR Kita)</span>
                             <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                     </div>
@@ -576,7 +610,7 @@
                             <span class="calculation-value" id="hasil-1-kanan-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                         <div class="calculation-row">
-                            <span class="calculation-label">DP</span>
+                            <span class="calculation-label">DP (TDP - Hasil 1)</span>
                             <span class="calculation-value" id="dp-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                     </div>
@@ -617,12 +651,12 @@
         
         // Fungsi untuk menghitung hasil
         function hitungHasil(kelompokId, kendaraanId) {
+            const otrLeasing = parseFloat(document.getElementById(`otr-leasing-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
             const otrKita = parseFloat(document.getElementById(`otr-kita-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
-            const otrInput = parseFloat(document.getElementById(`otr-input-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
             const tdp = parseFloat(document.getElementById(`tdp-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
             
             // Hitung hasil 1 (selisih OTR)
-            const hasil1 = otrInput - otrKita;
+            const hasil1 = otrLeasing - otrKita;
             document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             
@@ -666,8 +700,8 @@
             
             const kendaraan = document.getElementById(`kendaraan-${kelompokId}-${kendaraanId}`).value;
             const leasing = document.getElementById(`leasing-${kelompokId}-${kendaraanId}`).value;
+            const otrLeasing = document.getElementById(`otr-leasing-${kelompokId}-${kendaraanId}`).value;
             const otrKita = document.getElementById(`otr-kita-${kelompokId}-${kendaraanId}`).value;
-            const otrInput = document.getElementById(`otr-input-${kelompokId}-${kendaraanId}`).value;
             const hasil1 = document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent;
             const tdp = document.getElementById(`tdp-${kelompokId}-${kendaraanId}`).value;
             const dp = document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent;
@@ -679,8 +713,8 @@
                 kendaraanData: [{
                     kendaraan,
                     leasing,
+                    otrLeasing,
                     otrKita,
-                    otrInput,
                     hasil1,
                     tdp,
                     dp,
@@ -709,8 +743,8 @@
                 
                 const kendaraan = kendaraanElem.querySelector(`#kendaraan-${kelompokId}-${kendaraanId}`).value;
                 const leasing = kendaraanElem.querySelector(`#leasing-${kelompokId}-${kendaraanId}`).value;
+                const otrLeasing = kendaraanElem.querySelector(`#otr-leasing-${kelompokId}-${kendaraanId}`).value;
                 const otrKita = kendaraanElem.querySelector(`#otr-kita-${kelompokId}-${kendaraanId}`).value;
-                const otrInput = kendaraanElem.querySelector(`#otr-input-${kelompokId}-${kendaraanId}`).value;
                 const hasil1 = kendaraanElem.querySelector(`#hasil-1-${kelompokId}-${kendaraanId}`).textContent;
                 const tdp = kendaraanElem.querySelector(`#tdp-${kelompokId}-${kendaraanId}`).value;
                 const dp = kendaraanElem.querySelector(`#dp-${kelompokId}-${kendaraanId}`).textContent;
@@ -719,8 +753,8 @@
                 kendaraanData.push({
                     kendaraan,
                     leasing,
+                    otrLeasing,
                     otrKita,
-                    otrInput,
                     hasil1,
                     tdp,
                     dp,
@@ -760,8 +794,8 @@
                     
                     const kendaraan = kendaraanElem.querySelector(`#kendaraan-${kelompokId}-${kendaraanId}`).value;
                     const leasing = kendaraanElem.querySelector(`#leasing-${kelompokId}-${kendaraanId}`).value;
+                    const otrLeasing = kendaraanElem.querySelector(`#otr-leasing-${kelompokId}-${kendaraanId}`).value;
                     const otrKita = kendaraanElem.querySelector(`#otr-kita-${kelompokId}-${kendaraanId}`).value;
-                    const otrInput = kendaraanElem.querySelector(`#otr-input-${kelompokId}-${kendaraanId}`).value;
                     const hasil1 = kendaraanElem.querySelector(`#hasil-1-${kelompokId}-${kendaraanId}`).textContent;
                     const tdp = kendaraanElem.querySelector(`#tdp-${kelompokId}-${kendaraanId}`).value;
                     const dp = kendaraanElem.querySelector(`#dp-${kelompokId}-${kendaraanId}`).textContent;
@@ -770,8 +804,8 @@
                     kendaraanData.push({
                         kendaraan,
                         leasing,
+                        otrLeasing,
                         otrKita,
-                        otrInput,
                         hasil1,
                         tdp,
                         dp,
@@ -828,9 +862,14 @@
             
             if (!data) return;
             
+            currentDetailData = data;
+            
             let detailHTML = `
-                <h3>${data.namaKelompok} - ${data.tanggal}</h3>
-                <p><strong>Jumlah Kendaraan:</strong> ${data.kendaraanData.length}</p>
+                <div class="detail-header">
+                    <h3>${data.namaKelompok}</h3>
+                    <p><strong>Tanggal:</strong> ${data.tanggal}</p>
+                    <p><strong>Jumlah Kendaraan:</strong> ${data.kendaraanData.length}</p>
+                </div>
             `;
             
             data.kendaraanData.forEach((kendaraan, kIndex) => {
@@ -838,16 +877,18 @@
                     <div class="detail-kendaraan">
                         <h4>Kendaraan ${kIndex + 1}: ${kendaraan.kendaraan}</h4>
                         <p><strong>Leasing:</strong> ${kendaraan.leasing}</p>
-                        <div class="kendaraan-grid">
-                            <div class="kendaraan-side">
+                        <div class="detail-grid">
+                            <div class="detail-side">
+                                <h5>Data Input</h5>
+                                <p><strong>OTR Leasing:</strong> ${kendaraan.otrLeasing}</p>
                                 <p><strong>OTR Kita:</strong> ${kendaraan.otrKita}</p>
-                                <p><strong>OTR Input:</strong> ${kendaraan.otrInput}</p>
-                                <p><strong>Hasil 1:</strong> ${kendaraan.hasil1}</p>
-                            </div>
-                            <div class="kendaraan-side">
                                 <p><strong>TDP:</strong> ${kendaraan.tdp}</p>
-                                <p><strong>DP:</strong> ${kendaraan.dp}</p>
                                 <p><strong>Angsuran:</strong> ${kendaraan.angsuran}</p>
+                            </div>
+                            <div class="detail-side">
+                                <h5>Hasil Perhitungan</h5>
+                                <p><strong>Hasil 1 (OTR Leasing - OTR Kita):</strong> ${kendaraan.hasil1}</p>
+                                <p><strong>DP (TDP - Hasil 1):</strong> ${kendaraan.dp}</p>
                             </div>
                         </div>
                     </div>
@@ -856,6 +897,76 @@
             
             document.getElementById('detail-content').innerHTML = detailHTML;
             document.getElementById('detailModal').style.display = 'block';
+        }
+        
+        // Fungsi untuk export ke PDF
+        function exportToPDF() {
+            if (!currentDetailData) return;
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Judul
+            doc.setFontSize(18);
+            doc.text("Detail Kalkulasi Kendaraan", 105, 15, { align: "center" });
+            
+            // Informasi kelompok
+            doc.setFontSize(12);
+            doc.text(`Nama Kelompok: ${currentDetailData.namaKelompok}`, 15, 25);
+            doc.text(`Tanggal: ${currentDetailData.tanggal}`, 15, 32);
+            doc.text(`Jumlah Kendaraan: ${currentDetailData.kendaraanData.length}`, 15, 39);
+            
+            let yPosition = 50;
+            
+            // Data setiap kendaraan
+            currentDetailData.kendaraanData.forEach((kendaraan, index) => {
+                if (yPosition > 250) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+                
+                doc.setFontSize(14);
+                doc.text(`Kendaraan ${index + 1}: ${kendaraan.kendaraan}`, 15, yPosition);
+                yPosition += 10;
+                
+                doc.setFontSize(12);
+                doc.text(`Leasing: ${kendaraan.leasing}`, 15, yPosition);
+                yPosition += 8;
+                
+                // Data Input
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text("Data Input:", 15, yPosition);
+                yPosition += 8;
+                
+                doc.setFont(undefined, 'normal');
+                doc.text(`OTR Leasing: ${kendaraan.otrLeasing}`, 20, yPosition);
+                yPosition += 8;
+                
+                doc.text(`OTR Kita: ${kendaraan.otrKita}`, 20, yPosition);
+                yPosition += 8;
+                
+                doc.text(`TDP: ${kendaraan.tdp}`, 20, yPosition);
+                yPosition += 8;
+                
+                doc.text(`Angsuran: ${kendaraan.angsuran}`, 20, yPosition);
+                yPosition += 12;
+                
+                // Hasil Perhitungan
+                doc.setFont(undefined, 'bold');
+                doc.text("Hasil Perhitungan:", 15, yPosition);
+                yPosition += 8;
+                
+                doc.setFont(undefined, 'normal');
+                doc.text(`Hasil 1 (OTR Leasing - OTR Kita): ${kendaraan.hasil1}`, 20, yPosition);
+                yPosition += 8;
+                
+                doc.text(`DP (TDP - Hasil 1): ${kendaraan.dp}`, 20, yPosition);
+                yPosition += 15;
+            });
+            
+            // Simpan PDF
+            doc.save(`Kalkulasi_${currentDetailData.namaKelompok}_${new Date().toISOString().slice(0, 10)}.pdf`);
         }
         
         // Fungsi untuk menghapus data tersimpan
