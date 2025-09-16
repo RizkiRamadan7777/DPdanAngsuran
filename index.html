@@ -33,7 +33,7 @@
             margin: 0 auto;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
         
@@ -48,6 +48,7 @@
             display: flex;
             background-color: var(--light-color);
             border-bottom: 2px solid var(--primary-color);
+            flex-wrap: wrap;
         }
         
         .tab-button {
@@ -60,7 +61,7 @@
             transition: all 0.3s;
             flex: 1;
             text-align: center;
-            font-size: 14px;
+            min-width: 120px;
         }
         
         .tab-button.active {
@@ -93,6 +94,13 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--primary-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .kelompok-actions {
+            display: flex;
+            gap: 10px;
         }
         
         .input-group {
@@ -173,6 +181,14 @@
             background-color: white;
         }
         
+        .side-left {
+            border-top: 4px solid var(--primary-color);
+        }
+        
+        .side-right {
+            border-top: 4px solid var(--accent-color);
+        }
+        
         .calculation-row {
             display: flex;
             justify-content: space-between;
@@ -219,15 +235,22 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .kendaraan-actions {
+            display: flex;
+            gap: 8px;
         }
         
         .history-item {
             border: 1px solid #ddd;
             padding: 15px;
             margin-bottom: 15px;
-            border-radius: 6px;
+            border-radius: 8px;
             background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
         .saved-item {
@@ -236,13 +259,14 @@
             margin-bottom: 12px;
             background-color: white;
             border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
         .action-buttons {
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
         
         .add-button {
@@ -263,60 +287,34 @@
                 flex-direction: column;
             }
             
+            .tab-button {
+                min-width: 100%;
+            }
+            
             .kendaraan-grid {
                 grid-template-columns: 1fr;
             }
             
-            .kelompok-header {
+            .kelompok-header, .kendaraan-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 10px;
             }
             
-            .kendaraan-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
+            .kelompok-actions, .kendaraan-actions {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 10px;
             }
             
             .calculation-row {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 5px;
             }
             
             .calculation-value {
+                width: 100%;
                 text-align: left;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                border-radius: 8px;
-            }
-            
-            header {
-                padding: 1rem;
-            }
-            
-            .tab-content {
-                padding: 15px;
-            }
-            
-            .kelompok-container {
-                padding: 12px;
-            }
-            
-            input[type="text"], input[type="number"] {
-                padding: 8px;
+                margin-top: 5px;
             }
         }
     </style>
@@ -419,9 +417,14 @@
             kelompokDiv.innerHTML = `
                 <div class="kelompok-header">
                     <h2>Kelompok ${kelompokCount}</h2>
-                    <button class="btn-danger btn-small hapus-kelompok" data-kelompok="${kelompokId}">
-                        Hapus Kelompok
-                    </button>
+                    <div class="kelompok-actions">
+                        <button class="btn-success btn-small simpan-kelompok" data-kelompok="${kelompokId}">
+                            Simpan
+                        </button>
+                        <button class="btn-danger btn-small hapus-kelompok" data-kelompok="${kelompokId}">
+                            Hapus
+                        </button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="nama-kelompok-${kelompokCount}">Nama Kelompok</label>
@@ -440,10 +443,16 @@
             // Tambahkan event listener untuk tombol hapus kelompok
             kelompokDiv.querySelector('.hapus-kelompok').addEventListener('click', function() {
                 if (document.querySelectorAll('.kelompok-container').length > 1) {
-                    this.parentElement.parentElement.remove();
+                    this.parentElement.parentElement.parentElement.remove();
                 } else {
                     alert('Minimal harus ada satu kelompok');
                 }
+            });
+            
+            // Tambahkan event listener untuk tombol simpan kelompok
+            kelompokDiv.querySelector('.simpan-kelompok').addEventListener('click', function() {
+                const kelompokId = this.getAttribute('data-kelompok');
+                simpanKelompok(kelompokId);
             });
             
             // Tambahkan event listener untuk tombol tambah kendaraan
@@ -467,24 +476,35 @@
             kendaraanDiv.innerHTML = `
                 <div class="kendaraan-header">
                     <h3>Kendaraan ${kendaraanId}</h3>
-                    <button class="btn-danger btn-small hapus-kendaraan" data-kelompok="${kelompokId}" data-kendaraan="${kendaraanId}">
-                        Hapus
-                    </button>
+                    <div class="kendaraan-actions">
+                        <button class="btn-success btn-small simpan-kendaraan" data-kelompok="${kelompokId}" data-kendaraan="${kendaraanId}">
+                            Simpan
+                        </button>
+                        <button class="btn-danger btn-small hapus-kendaraan" data-kelompok="${kelompokId}" data-kendaraan="${kendaraanId}">
+                            Hapus
+                        </button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="kendaraan-${kelompokId}-${kendaraanId}">Nama Kendaraan</label>
                     <input type="text" id="kendaraan-${kelompokId}-${kendaraanId}" placeholder="Masukkan nama kendaraan">
                 </div>
+                <div class="input-group">
+                    <label for="leasing-${kelompokId}-${kendaraanId}">Leasing (OTR Input)</label>
+                    <input type="text" id="leasing-${kelompokId}-${kendaraanId}" placeholder="Contoh: Bank BNI, Mandiri, dll">
+                </div>
                 <div class="kendaraan-grid">
-                    <div class="kendaraan-side">
-                        <div class="input-group">
-                            <label for="leasing-${kelompokId}-${kendaraanId}">Leasing</label>
-                            <input type="text" id="leasing-${kelompokId}-${kendaraanId}" placeholder="Contoh: BNI, Mandiri, dll">
-                        </div>
+                    <div class="kendaraan-side side-left">
                         <div class="input-group">
                             <label for="otr-kita-${kelompokId}-${kendaraanId}">OTR Kita</label>
                             <div class="currency-input">
                                 <input type="text" id="otr-kita-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="otr-input-${kelompokId}-${kendaraanId}">OTR Input</label>
+                            <div class="currency-input">
+                                <input type="text" id="otr-input-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
                             </div>
                         </div>
                         <div class="calculation-row">
@@ -492,7 +512,7 @@
                             <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                     </div>
-                    <div class="kendaraan-side">
+                    <div class="kendaraan-side side-right">
                         <div class="input-group">
                             <label for="tdp-${kelompokId}-${kendaraanId}">TDP</label>
                             <div class="currency-input">
@@ -532,6 +552,13 @@
                 }
             });
             
+            // Tambahkan event listener untuk tombol simpan kendaraan
+            kendaraanDiv.querySelector('.simpan-kendaraan').addEventListener('click', function() {
+                const kelompokId = this.getAttribute('data-kelompok');
+                const kendaraanId = this.getAttribute('data-kendaraan');
+                simpanKendaraan(kelompokId, kendaraanId);
+            });
+            
             // Format input currency
             formatCurrencyInputs();
         }
@@ -539,13 +566,11 @@
         // Fungsi untuk menghitung hasil
         function hitungHasil(kelompokId, kendaraanId) {
             const otrKita = parseFloat(document.getElementById(`otr-kita-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
-            const leasing = document.getElementById(`leasing-${kelompokId}-${kendaraanId}`).value;
+            const otrInput = parseFloat(document.getElementById(`otr-input-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
             const tdp = parseFloat(document.getElementById(`tdp-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
             
             // Hitung hasil 1 (selisih OTR)
-            // Di sini kita asumsikan bahwa OTR Input adalah nilai tetap atau dari leasing
-            // Sesuai permintaan, kita hanya menggunakan OTR Kita dan TDP untuk kalkulasi
-            const hasil1 = 0; // Diubah sesuai kebutuhan bisnis
+            const hasil1 = otrInput - otrKita;
             document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             
@@ -582,6 +607,99 @@
             });
         }
         
+        // Fungsi untuk menyimpan kendaraan
+        function simpanKendaraan(kelompokId, kendaraanId) {
+            const kelompokNum = kelompokId.split('-')[1];
+            const namaKelompok = document.getElementById(`nama-kelompok-${kelompokNum}`).value || `Kelompok ${kelompokNum}`;
+            
+            const kendaraan = document.getElementById(`kendaraan-${kelompokId}-${kendaraanId}`).value;
+            const leasing = document.getElementById(`leasing-${kelompokId}-${kendaraanId}`).value;
+            const otrKita = document.getElementById(`otr-kita-${kelompokId}-${kendaraanId}`).value;
+            const otrInput = document.getElementById(`otr-input-${kelompokId}-${kendaraanId}`).value;
+            const hasil1 = document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent;
+            const tdp = document.getElementById(`tdp-${kelompokId}-${kendaraanId}`).value;
+            const dp = document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent;
+            const angsuran = document.getElementById(`angsuran-${kelompokId}-${kendaraanId}`).value;
+            
+            const data = {
+                tanggal: new Date().toLocaleString('id-ID'),
+                namaKelompok,
+                kendaraanData: [{
+                    kendaraan,
+                    leasing,
+                    otrKita,
+                    otrInput,
+                    hasil1,
+                    tdp,
+                    dp,
+                    angsuran
+                }]
+            };
+            
+            // Simpan ke localStorage
+            let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+            tersimpan.push(data);
+            localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
+            
+            // Simpan ke riwayat
+            let riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
+            riwayat.push(data);
+            localStorage.setItem('riwayat', JSON.stringify(riwayat));
+            
+            alert('Data kendaraan berhasil disimpan!');
+        }
+        
+        // Fungsi untuk menyimpan kelompok
+        function simpanKelompok(kelompokId) {
+            const kelompokNum = kelompokId.split('-')[1];
+            const namaKelompok = document.getElementById(`nama-kelompok-${kelompokNum}`).value || `Kelompok ${kelompokNum}`;
+            
+            const kendaraanData = [];
+            const kendaraanElements = document.querySelectorAll(`#${kelompokId} .calculation-table`);
+            
+            kendaraanElements.forEach(kendaraanElem => {
+                const kendaraanId = kendaraanElem.querySelector('h3').textContent.replace('Kendaraan ', '');
+                
+                const kendaraan = kendaraanElem.querySelector(`#kendaraan-${kelompokId}-${kendaraanId}`).value;
+                const leasing = kendaraanElem.querySelector(`#leasing-${kelompokId}-${kendaraanId}`).value;
+                const otrKita = kendaraanElem.querySelector(`#otr-kita-${kelompokId}-${kendaraanId}`).value;
+                const otrInput = kendaraanElem.querySelector(`#otr-input-${kelompokId}-${kendaraanId}`).value;
+                const hasil1 = kendaraanElem.querySelector(`#hasil-1-${kelompokId}-${kendaraanId}`).textContent;
+                const tdp = kendaraanElem.querySelector(`#tdp-${kelompokId}-${kendaraanId}`).value;
+                const dp = kendaraanElem.querySelector(`#dp-${kelompokId}-${kendaraanId}`).textContent;
+                const angsuran = kendaraanElem.querySelector(`#angsuran-${kelompokId}-${kendaraanId}`).value;
+                
+                kendaraanData.push({
+                    kendaraan,
+                    leasing,
+                    otrKita,
+                    otrInput,
+                    hasil1,
+                    tdp,
+                    dp,
+                    angsuran
+                });
+            });
+            
+            const data = {
+                tanggal: new Date().toLocaleString('id-ID'),
+                namaKelompok,
+                kendaraanData
+            };
+            
+            // Simpan ke localStorage
+            let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+            tersimpan.push(data);
+            localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
+            
+            // Simpan ke riwayat
+            let riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
+            riwayat.push(data);
+            localStorage.setItem('riwayat', JSON.stringify(riwayat));
+            
+            alert('Data kelompok berhasil disimpan!');
+        }
+        
         // Fungsi untuk menyimpan semua data
         function simpanSemuaData() {
             const semuaData = [];
@@ -601,6 +719,7 @@
                     const kendaraan = kendaraanElem.querySelector(`#kendaraan-${kelompokId}-${kendaraanId}`).value;
                     const leasing = kendaraanElem.querySelector(`#leasing-${kelompokId}-${kendaraanId}`).value;
                     const otrKita = kendaraanElem.querySelector(`#otr-kita-${kelompokId}-${kendaraanId}`).value;
+                    const otrInput = kendaraanElem.querySelector(`#otr-input-${kelompokId}-${kendaraanId}`).value;
                     const hasil1 = kendaraanElem.querySelector(`#hasil-1-${kelompokId}-${kendaraanId}`).textContent;
                     const tdp = kendaraanElem.querySelector(`#tdp-${kelompokId}-${kendaraanId}`).value;
                     const dp = kendaraanElem.querySelector(`#dp-${kelompokId}-${kendaraanId}`).textContent;
@@ -610,6 +729,7 @@
                         kendaraan,
                         leasing,
                         otrKita,
+                        otrInput,
                         hasil1,
                         tdp,
                         dp,
@@ -634,7 +754,7 @@
             riwayat = riwayat.concat(semuaData);
             localStorage.setItem('riwayat', JSON.stringify(riwayat));
             
-            alert('Data berhasil disimpan!');
+            alert('Semua data berhasil disimpan!');
         }
         
         // Fungsi untuk memuat data tersimpan
@@ -685,14 +805,15 @@
                             <div class="kendaraan-grid">
                                 <div class="kendaraan-side">
                                     <p>OTR Kita: ${kendaraan.otrKita}</p>
+                                    <p>OTR Input: ${kendaraan.otrInput}</p>
                                     <p>Hasil 1: ${kendaraan.hasil1}</p>
                                 </div>
                                 <div class="kendaraan-side">
                                     <p>TDP: ${kendaraan.tdp}</p>
                                     <p>DP: ${kendaraan.dp}</p>
+                                    <p>Angsuran: ${kendaraan.angsuran}</p>
                                 </div>
                             </div>
-                            <p>Angsuran: ${kendaraan.angsuran}</p>
                         </div>
                     `;
                 });
