@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator DP dan Angsuran Kendaraan</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --success-color: #2ecc71;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .tab-navigation {
+            display: flex;
+            background-color: var(--light-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .tab-button {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--dark-color);
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .tab-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 25px;
+            background-color: white;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .kelompok-container {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .kelompok-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .btn-icon {
+            margin-right: 5px;
+        }
+        
+        .kendaraan-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .kendaraan-side {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .kendaraan-side h4 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            color: var(--dark-color);
+        }
+        
+        .side-left {
+            border-top: 4px solid var(--primary-color);
+        }
+        
+        .side-right {
+            border-top: 4px solid var(--accent-color);
+        }
+        
+        .calculation-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .calculation-label {
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        .calculation-value {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        .currency-input {
+            position: relative;
+        }
+        
+        .currency-input::before {
+            content: "Rp";
+            position: absolute;
+            left: 10px;
+            top: 12px;
+            font-weight: bold;
+            color: #777;
+        }
+        
+        .currency-input input {
+            padding-left: 35px;
+        }
+        
+        .kendaraan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .history-item {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .saved-item {
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .add-button {
+            background-color: var(--success-color);
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .tab-navigation {
+                flex-direction: column;
+            }
+            
+            .kendaraan-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kalkulator DP dan Angsuran Kendaraan</h1>
+        </header>
+        
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="kalkulator">Kalkulator</button>
+            <button class="tab-button" data-tab="tersimpan">Tersimpan</button>
+            <button class="tab-button" data-tab="riwayat">Riwayat</button>
+        </div>
+        
+        <div id="kalkulator" class="tab-content active">
+            <div id="kelompok-container">
+                <!-- Kelompok akan ditambahkan di sini -->
+            </div>
+            
+            <button id="tambah-kelompok" class="add-button">
+                <span class="btn-icon">+</span> Tambah Kelompok
+            </button>
+            
+            <div class="action-buttons">
+                <button id="simpan-btn" class="btn-success">
+                    Simpan Semua Data
+                </button>
+            </div>
+        </div>
+        
+        <div id="tersimpan" class="tab-content">
+            <h2>Data Tersimpan</h2>
+            <div id="daftar-tersimpan">
+                <!-- Data tersimpan akan ditampilkan di sini -->
+            </div>
+        </div>
+        
+        <div id="riwayat" class="tab-content">
+            <h2>Riwayat Perhitungan</h2>
+            <div id="daftar-riwayat">
+                <!-- Riwayat perhitungan akan ditampilkan di sini -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variabel global
+        let kelompokCount = 0;
+        let kendaraanCount = {};
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tambahkan kelompok pertama saat halaman dimuat
+            tambahKelompok();
+            
+            // Event listener untuk tab
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Nonaktifkan semua tab
+                    document.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Aktifkan tab yang dipilih
+                    button.classList.add('active');
+                    const tabId = button.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Jika tab Tersimpan atau Riwayat dibuka, muat data
+                    if (tabId === 'tersimpan') {
+                        muatDataTersimpan();
+                    } else if (tabId === 'riwayat') {
+                        muatRiwayat();
+                    }
+                });
+            });
+            
+            // Event listener untuk tombol tambah kelompok
+            document.getElementById('tambah-kelompok').addEventListener('click', tambahKelompok);
+            
+            // Event listener untuk tombol simpan
+            document.getElementById('simpan-btn').addEventListener('click', simpanSemuaData);
+        });
+        
+        // Fungsi untuk menambah kelompok
+        function tambahKelompok() {
+            kelompokCount++;
+            const kelompokId = `kelompok-${kelompokCount}`;
+            kendaraanCount[kelompokId] = 0;
+            
+            const kelompokDiv = document.createElement('div');
+            kelompokDiv.className = 'kelompok-container';
+            kelompokDiv.id = kelompokId;
+            
+            kelompokDiv.innerHTML = `
+                <div class="kelompok-header">
+                    <h2>Kelompok ${kelompokCount}</h2>
+                    <button class="btn-danger btn-small hapus-kelompok" data-kelompok="${kelompokId}">
+                        Hapus Kelompok
+                    </button>
+                </div>
+                <div class="input-group">
+                    <label for="nama-kelompok-${kelompokCount}">Nama Kelompok</label>
+                    <input type="text" id="nama-kelompok-${kelompokCount}" placeholder="Masukkan nama kelompok">
+                </div>
+                <div id="kendaraan-container-${kelompokCount}">
+                    <!-- Kendaraan akan ditambahkan di sini -->
+                </div>
+                <button class="tambah-kendaraan" data-kelompok="${kelompokId}">
+                    <span class="btn-icon">+</span> Tambah Kendaraan
+                </button>
+            `;
+            
+            document.getElementById('kelompok-container').appendChild(kelompokDiv);
+            
+            // Tambahkan event listener untuk tombol hapus kelompok
+            kelompokDiv.querySelector('.hapus-kelompok').addEventListener('click', function() {
+                if (document.querySelectorAll('.kelompok-container').length > 1) {
+                    this.parentElement.parentElement.remove();
+                } else {
+                    alert('Minimal harus ada satu kelompok');
+                }
+            });
+            
+            // Tambahkan event listener untuk tombol tambah kendaraan
+            kelompokDiv.querySelector('.tambah-kendaraan').addEventListener('click', function() {
+                const kelompokId = this.getAttribute('data-kelompok');
+                tambahKendaraan(kelompokId);
+            });
+            
+            // Tambahkan kendaraan pertama
+            tambahKendaraan(kelompokId);
+        }
+        
+        // Fungsi untuk menambah kendaraan
+        function tambahKendaraan(kelompokId) {
+            const kelompokNum = kelompokId.split('-')[1];
+            kendaraanCount[kelompokId]++;
+            const kendaraanId = kendaraanCount[kelompokId];
+            
+            const kendaraanDiv = document.createElement('div');
+            kendaraanDiv.className = 'calculation-table';
+            kendaraanDiv.innerHTML = `
+                <div class="kendaraan-header">
+                    <h3>Kendaraan ${kendaraanId}</h3>
+                    <button class="btn-danger btn-small hapus-kendaraan" data-kelompok="${kelompokId}" data-kendaraan="${kendaraanId}">
+                        Hapus
+                    </button>
+                </div>
+                <div class="input-group">
+                    <label for="kendaraan-${kelompokId}-${kendaraanId}">Nama Kendaraan</label>
+                    <input type="text" id="kendaraan-${kelompokId}-${kendaraanId}" placeholder="Masukkan nama kendaraan">
+                </div>
+                <div class="kendaraan-grid">
+                    <div class="kendaraan-side side-left">
+                        <h4>Sisi Kiri</h4>
+                        <div class="input-group">
+                            <label for="otr-input-${kelompokId}-${kendaraanId}">OTR (Input)</label>
+                            <div class="currency-input">
+                                <input type="text" id="otr-input-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="otr-kita-${kelompokId}-${kendaraanId}">OTR Kita</label>
+                            <div class="currency-input">
+                                <input type="text" id="otr-kita-${kelompokId}-${kendaraanId}" placeholder="Nominal OTR" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
+                            </div>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="calculation-label">Hasil 1 (OTR Input - OTR Kita)</span>
+                            <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">Rp 0</span>
+                        </div>
+                    </div>
+                    <div class="kendaraan-side side-right">
+                        <h4>Sisi Kanan</h4>
+                        <div class="input-group">
+                            <label for="tdp-${kelompokId}-${kendaraanId}">TDP</label>
+                            <div class="currency-input">
+                                <input type="text" id="tdp-${kelompokId}-${kendaraanId}" placeholder="Nominal TDP" oninput="hitungHasil('${kelompokId}', ${kendaraanId})">
+                            </div>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="calculation-label">Hasil 1</span>
+                            <span class="calculation-value" id="hasil-1-kanan-${kelompokId}-${kendaraanId}">Rp 0</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="calculation-label">DP (Hasil 2 - TDP - Hasil 1)</span>
+                            <span class="calculation-value" id="dp-${kelompokId}-${kendaraanId}">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById(`kendaraan-container-${kelompokNum}`).appendChild(kendaraanDiv);
+            
+            // Tambahkan event listener untuk tombol hapus kendaraan
+            kendaraanDiv.querySelector('.hapus-kendaraan').addEventListener('click', function() {
+                const kelompokId = this.getAttribute('data-kelompok');
+                const kendaraanNum = this.getAttribute('data-kendaraan');
+                if (document.querySelectorAll(`#kendaraan-container-${kelompokNum} .calculation-table`).length > 1) {
+                    this.parentElement.parentElement.parentElement.remove();
+                } else {
+                    alert('Minimal harus ada satu kendaraan');
+                }
+            });
+            
+            // Format input currency
+            formatCurrencyInputs();
+        }
+        
+        // Fungsi untuk menghitung hasil
+        function hitungHasil(kelompokId, kendaraanId) {
+            const otrKita = parseFloat(document.getElementById(`otr-kita-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
+            const otrInput = parseFloat(document.getElementById(`otr-input-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
+            const tdp = parseFloat(document.getElementById(`tdp-${kelompokId}-${kendaraanId}`).value.replace(/[^0-9]/g, '')) || 0;
+            
+            // Hitung hasil 1 (selisih OTR)
+            const hasil1 = otrInput - otrKita;
+            document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
+            document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
+            
+            // Hitung DP (TDP - hasil1)
+            const dp = tdp - hasil1;
+            document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(dp);
+        }
+        
+        // Fungsi untuk format mata uang Rupiah
+        function formatRupiah(angka) {
+            if (isNaN(angka)) return 'Rp 0';
+            
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(angka);
+        }
+        
+        // Fungsi untuk format input currency
+        function formatCurrencyInputs() {
+            document.querySelectorAll('.currency-input input').forEach(input => {
+                input.addEventListener('input', function() {
+                    // Hapus semua karakter non-digit
+                    let value = this.value.replace(/[^0-9]/g, '');
+                    
+                    // Format sebagai Rupiah
+                    if (value) {
+                        this.value = formatRupiah(value);
+                    } else {
+                        this.value = '';
+                    }
+                });
+            });
+        }
+        
+        // Fungsi untuk menyimpan semua data
+        function simpanSemuaData() {
+            const semuaData = [];
+            const kelompokElements = document.querySelectorAll('.kelompok-container');
+            
+            kelompokElements.forEach(kelompokElem => {
+                const kelompokId = kelompokElem.id;
+                const kelompokNum = kelompokId.split('-')[1];
+                const namaKelompok = document.getElementById(`nama-kelompok-${kelompokNum}`).value || `Kelompok ${kelompokNum}`;
+                
+                const kendaraanData = [];
+                const kendaraanElements = kelompokElem.querySelectorAll('.calculation-table');
+                
+                kendaraanElements.forEach(kendaraanElem => {
+                    const kendaraanId = kendaraanElem.querySelector('h3').textContent.replace('Kendaraan ', '');
+                    
+                    const kendaraan = kendaraanElem.querySelector(`#kendaraan-${kelompokId}-${kendaraanId}`).value;
+                    const otrKita = kendaraanElem.querySelector(`#otr-kita-${kelompokId}-${kendaraanId}`).value;
+                    const otrInput = kendaraanElem.querySelector(`#otr-input-${kelompokId}-${kendaraanId}`).value;
+                    const hasil1 = kendaraanElem.querySelector(`#hasil-1-${kelompokId}-${kendaraanId}`).textContent;
+                    const tdp = kendaraanElem.querySelector(`#tdp-${kelompokId}-${kendaraanId}`).value;
+                    const dp = kendaraanElem.querySelector(`#dp-${kelompokId}-${kendaraanId}`).textContent;
+                    
+                    kendaraanData.push({
+                        kendaraan,
+                        otrKita,
+                        otrInput,
+                        hasil1,
+                        tdp,
+                        dp
+                    });
+                });
+                
+                semuaData.push({
+                    tanggal: new Date().toLocaleString('id-ID'),
+                    namaKelompok,
+                    kendaraanData
+                });
+            });
+            
+            // Simpan ke localStorage
+            let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+            tersimpan = tersimpan.concat(semuaData);
+            localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
+            
+            // Simpan ke riwayat
+            let riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
+            riwayat = riwayat.concat(semuaData);
+            localStorage.setItem('riwayat', JSON.stringify(riwayat));
+            
+            alert('Data berhasil disimpan!');
+        }
+        
+        // Fungsi untuk memuat data tersimpan
+        function muatDataTersimpan() {
+            const daftarTersimpan = document.getElementById('daftar-tersimpan');
+            daftarTersimpan.innerHTML = '';
+            
+            const tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+            
+            if (tersimpan.length === 0) {
+                daftarTersimpan.innerHTML = '<p>Belum ada data tersimpan.</p>';
+                return;
+            }
+            
+            tersimpan.forEach((data, index) => {
+                const item = document.createElement('div');
+                item.className = 'saved-item';
+                item.innerHTML = `
+                    <h3>${data.namaKelompok} - ${data.tanggal}</h3>
+                    <p><strong>Jumlah Kendaraan:</strong> ${data.kendaraanData.length}</p>
+                    <button onclick="hapusData(${index})" class="btn-danger btn-small">Hapus</button>
+                `;
+                daftarTersimpan.appendChild(item);
+            });
+        }
+        
+        // Fungsi untuk memuat riwayat
+        function muatRiwayat() {
+            const daftarRiwayat = document.getElementById('daftar-riwayat');
+            daftarRiwayat.innerHTML = '';
+            
+            const riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
+            
+            if (riwayat.length === 0) {
+                daftarRiwayat.innerHTML = '<p>Belum ada riwayat perhitungan.</p>';
+                return;
+            }
+            
+            riwayat.forEach((data, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                let kendaraanHTML = '';
+                data.kendaraanData.forEach(kendaraan => {
+                    kendaraanHTML += `
+                        <div class="calculation-table">
+                            <h4>${kendaraan.kendaraan}</h4>
+                            <div class="kendaraan-grid">
+                                <div class="kendaraan-side">
+                                    <p>OTR Kita: ${kendaraan.otrKita}</p>
+                                    <p>OTR Input: ${kendaraan.otrInput}</p>
+                                    <p>Hasil 1: ${kendaraan.hasil1}</p>
+                                </div>
+                                <div class="kendaraan-side">
+                                    <p>TDP: ${kendaraan.tdp}</p>
+                                    <p>DP: ${kendaraan.dp}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                item.innerHTML = `
+                    <h3>${data.namaKelompok} - ${data.tanggal}</h3>
+                    ${kendaraanHTML}
+                `;
+                daftarRiwayat.appendChild(item);
+            });
+        }
+        
+        // Fungsi untuk menghapus data tersimpan
+        function hapusData(index) {
+            let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+            tersimpan.splice(index, 1);
+            localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
+            muatDataTersimpan();
+        }
+    </script>
+</body>
+</html>
