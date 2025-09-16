@@ -217,7 +217,7 @@
         }
         
         .currency-input::before {
-           
+            content: "Rp";
             position: absolute;
             left: 10px;
             top: 10px;
@@ -242,15 +242,6 @@
         .kendaraan-actions {
             display: flex;
             gap: 8px;
-        }
-        
-        .history-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         
         .saved-item {
@@ -280,6 +271,49 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             background-color: white;
+        }
+        
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 40px auto;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--accent-color);
+        }
+        
+        .detail-content {
+            margin-top: 20px;
+        }
+        
+        .detail-kendaraan {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
         
         @media (max-width: 768px) {
@@ -316,6 +350,11 @@
                 text-align: left;
                 margin-top: 5px;
             }
+            
+            .modal-content {
+                margin: 20px 10px;
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -328,7 +367,6 @@
         <div class="tab-navigation">
             <button class="tab-button active" data-tab="kalkulator">Kalkulator</button>
             <button class="tab-button" data-tab="tersimpan">Tersimpan</button>
-            <button class="tab-button" data-tab="riwayat">Riwayat</button>
         </div>
         
         <div id="kalkulator" class="tab-content active">
@@ -353,11 +391,15 @@
                 <!-- Data tersimpan akan ditampilkan di sini -->
             </div>
         </div>
-        
-        <div id="riwayat" class="tab-content">
-            <h2>Riwayat Perhitungan</h2>
-            <div id="daftar-riwayat">
-                <!-- Riwayat perhitungan akan ditampilkan di sini -->
+    </div>
+
+    <!-- Modal untuk melihat detail -->
+    <div id="detailModal" class="detail-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Detail Data Tersimpan</h2>
+            <div id="detail-content" class="detail-content">
+                <!-- Detail data akan ditampilkan di sini -->
             </div>
         </div>
     </div>
@@ -388,11 +430,9 @@
                     const tabId = button.getAttribute('data-tab');
                     document.getElementById(tabId).classList.add('active');
                     
-                    // Jika tab Tersimpan atau Riwayat dibuka, muat data
+                    // Jika tab Tersimpan dibuka, muat data
                     if (tabId === 'tersimpan') {
                         muatDataTersimpan();
-                    } else if (tabId === 'riwayat') {
-                        muatRiwayat();
                     }
                 });
             });
@@ -402,6 +442,18 @@
             
             // Event listener untuk tombol simpan
             document.getElementById('simpan-btn').addEventListener('click', simpanSemuaData);
+            
+            // Event listener untuk modal
+            document.querySelector('.close-modal').addEventListener('click', function() {
+                document.getElementById('detailModal').style.display = 'none';
+            });
+            
+            // Tutup modal ketika klik di luar konten modal
+            window.addEventListener('click', function(event) {
+                if (event.target == document.getElementById('detailModal')) {
+                    document.getElementById('detailModal').style.display = 'none';
+                }
+            });
         });
         
         // Fungsi untuk menambah kelompok
@@ -641,11 +693,6 @@
             tersimpan.push(data);
             localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
             
-            // Simpan ke riwayat
-            let riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
-            riwayat.push(data);
-            localStorage.setItem('riwayat', JSON.stringify(riwayat));
-            
             alert('Data kendaraan berhasil disimpan!');
         }
         
@@ -691,11 +738,6 @@
             let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
             tersimpan.push(data);
             localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
-            
-            // Simpan ke riwayat
-            let riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
-            riwayat.push(data);
-            localStorage.setItem('riwayat', JSON.stringify(riwayat));
             
             alert('Data kelompok berhasil disimpan!');
         }
@@ -749,11 +791,6 @@
             tersimpan = tersimpan.concat(semuaData);
             localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
             
-            // Simpan ke riwayat
-            let riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
-            riwayat = riwayat.concat(semuaData);
-            localStorage.setItem('riwayat', JSON.stringify(riwayat));
-            
             alert('Semua data berhasil disimpan!');
         }
         
@@ -775,63 +812,60 @@
                 item.innerHTML = `
                     <h3>${data.namaKelompok} - ${data.tanggal}</h3>
                     <p><strong>Jumlah Kendaraan:</strong> ${data.kendaraanData.length}</p>
-                    <button onclick="hapusData(${index})" class="btn-danger btn-small">Hapus</button>
+                    <div class="action-buttons">
+                        <button onclick="lihatDetail(${index})" class="btn-success btn-small">Lihat Detail</button>
+                        <button onclick="hapusData(${index})" class="btn-danger btn-small">Hapus</button>
+                    </div>
                 `;
                 daftarTersimpan.appendChild(item);
             });
         }
         
-        // Fungsi untuk memuat riwayat
-        function muatRiwayat() {
-            const daftarRiwayat = document.getElementById('daftar-riwayat');
-            daftarRiwayat.innerHTML = '';
+        // Fungsi untuk melihat detail data
+        function lihatDetail(index) {
+            const tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+            const data = tersimpan[index];
             
-            const riwayat = JSON.parse(localStorage.getItem('riwayat')) || [];
+            if (!data) return;
             
-            if (riwayat.length === 0) {
-                daftarRiwayat.innerHTML = '<p>Belum ada riwayat perhitungan.</p>';
-                return;
-            }
+            let detailHTML = `
+                <h3>${data.namaKelompok} - ${data.tanggal}</h3>
+                <p><strong>Jumlah Kendaraan:</strong> ${data.kendaraanData.length}</p>
+            `;
             
-            riwayat.forEach((data, index) => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                
-                let kendaraanHTML = '';
-                data.kendaraanData.forEach(kendaraan => {
-                    kendaraanHTML += `
-                        <div class="calculation-table">
-                            <h4>${kendaraan.kendaraan} - ${kendaraan.leasing}</h4>
-                            <div class="kendaraan-grid">
-                                <div class="kendaraan-side">
-                                    <p>OTR Kita: ${kendaraan.otrKita}</p>
-                                    <p>OTR Input: ${kendaraan.otrInput}</p>
-                                    <p>Hasil 1: ${kendaraan.hasil1}</p>
-                                </div>
-                                <div class="kendaraan-side">
-                                    <p>TDP: ${kendaraan.tdp}</p>
-                                    <p>DP: ${kendaraan.dp}</p>
-                                    <p>Angsuran: ${kendaraan.angsuran}</p>
-                                </div>
+            data.kendaraanData.forEach((kendaraan, kIndex) => {
+                detailHTML += `
+                    <div class="detail-kendaraan">
+                        <h4>Kendaraan ${kIndex + 1}: ${kendaraan.kendaraan}</h4>
+                        <p><strong>Leasing:</strong> ${kendaraan.leasing}</p>
+                        <div class="kendaraan-grid">
+                            <div class="kendaraan-side">
+                                <p><strong>OTR Kita:</strong> ${kendaraan.otrKita}</p>
+                                <p><strong>OTR Input:</strong> ${kendaraan.otrInput}</p>
+                                <p><strong>Hasil 1:</strong> ${kendaraan.hasil1}</p>
+                            </div>
+                            <div class="kendaraan-side">
+                                <p><strong>TDP:</strong> ${kendaraan.tdp}</p>
+                                <p><strong>DP:</strong> ${kendaraan.dp}</p>
+                                <p><strong>Angsuran:</strong> ${kendaraan.angsuran}</p>
                             </div>
                         </div>
-                    `;
-                });
-                
-                item.innerHTML = `
-                    <h3>${data.namaKelompok} - ${data.tanggal}</h3>
-                    ${kendaraanHTML}
+                    </div>
                 `;
-                daftarRiwayat.appendChild(item);
             });
+            
+            document.getElementById('detail-content').innerHTML = detailHTML;
+            document.getElementById('detailModal').style.display = 'block';
         }
         
         // Fungsi untuk menghapus data tersimpan
         function hapusData(index) {
-            let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
-            tersimpan.splice(index, 1);
-            localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
-            muatDataTersimpan();
+            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                let tersimpan = JSON.parse(localStorage.getItem('dataTersimpan')) || [];
+                tersimpan.splice(index, 1);
+                localStorage.setItem('dataTersimpan', JSON.stringify(tersimpan));
+                muatDataTersimpan();
+            }
         }
     </script>
 </body>
