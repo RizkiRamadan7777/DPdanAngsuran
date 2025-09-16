@@ -218,8 +218,18 @@
             position: relative;
         }
         
+        .currency-input::before {
+            content: "Rp";
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            font-weight: bold;
+            color: #777;
+            font-size: 14px;
+        }
+        
         .currency-input input {
-            padding-left: 10px;
+            padding-left: 35px;
         }
         
         .kendaraan-header {
@@ -585,7 +595,7 @@
                         </div>
                         <div class="calculation-row">
                             <span class="calculation-label">Hasil 1 (OTR Leasing - OTR Kita)</span>
-                            <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">0</span>
+                            <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                     </div>
                     <div class="kendaraan-side side-right">
@@ -597,11 +607,11 @@
                         </div>
                         <div class="calculation-row">
                             <span class="calculation-label">Hasil 1</span>
-                            <span class="calculation-value" id="hasil-1-kanan-${kelompokId}-${kendaraanId}">0</span>
+                            <span class="calculation-value" id="hasil-1-kanan-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                         <div class="calculation-row">
                             <span class="calculation-label">DP (TDP - Hasil 1)</span>
-                            <span class="calculation-value" id="dp-${kelompokId}-${kendaraanId}">0</span>
+                            <span class="calculation-value" id="dp-${kelompokId}-${kendaraanId}">Rp 0</span>
                         </div>
                     </div>
                 </div>
@@ -647,19 +657,12 @@
             
             // Hitung hasil 1 (selisih OTR)
             const hasil1 = otrLeasing - otrKita;
-            document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatNumber(hasil1);
-            document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatNumber(hasil1);
+            document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
+            document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
             
             // Hitung DP (TDP - hasil1)
             const dp = tdp - hasil1;
-            document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent = formatNumber(dp);
-        }
-        
-        // Fungsi untuk format angka dengan pemisah ribuan
-        function formatNumber(angka) {
-            if (isNaN(angka)) return '0';
-            
-            return new Intl.NumberFormat('id-ID').format(angka);
+            document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(dp);
         }
         
         // Fungsi untuk format mata uang Rupiah
@@ -680,9 +683,9 @@
                     // Hapus semua karakter non-digit
                     let value = this.value.replace(/[^0-9]/g, '');
                     
-                    // Format sebagai angka dengan pemisah ribuan
+                    // Format sebagai Rupiah
                     if (value) {
-                        this.value = formatNumber(value);
+                        this.value = formatRupiah(value);
                     } else {
                         this.value = '';
                     }
@@ -870,14 +873,6 @@
             `;
             
             data.kendaraanData.forEach((kendaraan, kIndex) => {
-                // Konversi nilai string ke angka untuk perhitungan
-                const otrLeasingNum = parseFloat(kendaraan.otrLeasing.replace(/[^0-9]/g, '')) || 0;
-                const otrKitaNum = parseFloat(kendaraan.otrKita.replace(/[^0-9]/g, '')) || 0;
-                const tdpNum = parseFloat(kendaraan.tdp.replace(/[^0-9]/g, '')) || 0;
-                const angsuranNum = parseFloat(kendaraan.angsuran.replace(/[^0-9]/g, '')) || 0;
-                const hasil1Num = parseFloat(kendaraan.hasil1.replace(/[^0-9]/g, '')) || 0;
-                const dpNum = parseFloat(kendaraan.dp.replace(/[^0-9]/g, '')) || 0;
-                
                 detailHTML += `
                     <div class="detail-kendaraan">
                         <h4>Kendaraan ${kIndex + 1}: ${kendaraan.kendaraan}</h4>
@@ -885,15 +880,15 @@
                         <div class="detail-grid">
                             <div class="detail-side">
                                 <h5>Data Input</h5>
-                                <p><strong>OTR Leasing:</strong> ${formatRupiah(otrLeasingNum)}</p>
-                                <p><strong>OTR Kita:</strong> ${formatRupiah(otrKitaNum)}</p>
-                                <p><strong>TDP:</strong> ${formatRupiah(tdpNum)}</p>
-                                <p><strong>Angsuran:</strong> ${formatRupiah(angsuranNum)}</p>
+                                <p><strong>OTR Leasing:</strong> ${kendaraan.otrLeasing}</p>
+                                <p><strong>OTR Kita:</strong> ${kendaraan.otrKita}</p>
+                                <p><strong>TDP:</strong> ${kendaraan.tdp}</p>
+                                <p><strong>Angsuran:</strong> ${kendaraan.angsuran}</p>
                             </div>
                             <div class="detail-side">
                                 <h5>Hasil Perhitungan</h5>
-                                <p><strong>Hasil 1 (OTR Leasing - OTR Kita):</strong> ${formatRupiah(hasil1Num)}</p>
-                                <p><strong>DP (TDP - Hasil 1):</strong> ${formatRupiah(dpNum)}</p>
+                                <p><strong>Hasil 1 (OTR Leasing - OTR Kita):</strong> ${kendaraan.hasil1}</p>
+                                <p><strong>DP (TDP - Hasil 1):</strong> ${kendaraan.dp}</p>
                             </div>
                         </div>
                     </div>
@@ -911,75 +906,114 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // Judul
+            // Set judul
             doc.setFontSize(18);
-            doc.text("Detail Kalkulasi Kendaraan", 105, 15, { align: "center" });
+            doc.setTextColor(40, 40, 40);
+            doc.text("LAPORAN PERHITUNGAN DP DAN ANGSURAN", 105, 20, { align: "center" });
+            
+            // Garis pemisah
+            doc.setDrawColor(200, 200, 200);
+            doc.line(15, 25, 195, 25);
             
             // Informasi kelompok
             doc.setFontSize(12);
-            doc.text(`Nama Kelompok: ${currentDetailData.namaKelompok}`, 15, 25);
-            doc.text(`Tanggal: ${currentDetailData.tanggal}`, 15, 32);
-            doc.text(`Jumlah Kendaraan: ${currentDetailData.kendaraanData.length}`, 15, 39);
+            doc.setTextColor(80, 80, 80);
+            doc.text(`Kelompok: ${currentDetailData.namaKelompok}`, 20, 35);
+            doc.text(`Tanggal: ${currentDetailData.tanggal}`, 20, 42);
+            doc.text(`Jumlah Kendaraan: ${currentDetailData.kendaraanData.length}`, 20, 49);
             
-            let yPosition = 50;
+            let yPosition = 65;
             
             // Data setiap kendaraan
             currentDetailData.kendaraanData.forEach((kendaraan, index) => {
-                if (yPosition > 250) {
+                // Cek jika perlu halaman baru
+                if (yPosition > 240) {
                     doc.addPage();
                     yPosition = 20;
+                    
+                    // Judul untuk halaman baru
+                    doc.setFontSize(18);
+                    doc.setTextColor(40, 40, 40);
+                    doc.text("LAPORAN PERHITUNGAN DP DAN ANGSURAN (Lanjutan)", 105, 15, { align: "center" });
+                    doc.setFontSize(12);
+                    yPosition = 30;
                 }
                 
-                // Konversi nilai string ke angka untuk perhitungan
-                const otrLeasingNum = parseFloat(kendaraan.otrLeasing.replace(/[^0-9]/g, '')) || 0;
-                const otrKitaNum = parseFloat(kendaraan.otrKita.replace(/[^0-9]/g, '')) || 0;
-                const tdpNum = parseFloat(kendaraan.tdp.replace(/[^0-9]/g, '')) || 0;
-                const angsuranNum = parseFloat(kendaraan.angsuran.replace(/[^0-9]/g, '')) || 0;
-                const hasil1Num = parseFloat(kendaraan.hasil1.replace(/[^0-9]/g, '')) || 0;
-                const dpNum = parseFloat(kendaraan.dp.replace(/[^0-9]/g, '')) || 0;
-                
+                // Header kendaraan
                 doc.setFontSize(14);
-                doc.text(`Kendaraan ${index + 1}: ${kendaraan.kendaraan}`, 15, yPosition);
+                doc.setTextColor(30, 30, 30);
+                doc.text(`Kendaraan ${index + 1}: ${kendaraan.kendaraan}`, 20, yPosition);
                 yPosition += 10;
                 
+                // Info leasing
                 doc.setFontSize(12);
-                doc.text(`Leasing: ${kendaraan.leasing}`, 15, yPosition);
+                doc.setTextColor(80, 80, 80);
+                doc.text(`Leasing: ${kendaraan.leasing}`, 20, yPosition);
                 yPosition += 8;
+                
+                // Garis pemisah
+                doc.setDrawColor(200, 200, 200);
+                doc.line(20, yPosition, 190, yPosition);
+                yPosition += 10;
                 
                 // Data Input
                 doc.setFontSize(12);
+                doc.setTextColor(30, 30, 30);
                 doc.setFont(undefined, 'bold');
-                doc.text("Data Input:", 15, yPosition);
+                doc.text("DATA INPUT:", 20, yPosition);
                 yPosition += 8;
                 
                 doc.setFont(undefined, 'normal');
-                doc.text(`OTR Leasing: ${formatRupiah(otrLeasingNum)}`, 20, yPosition);
+                doc.text(`OTR Leasing: ${kendaraan.otrLeasing}`, 25, yPosition);
                 yPosition += 8;
                 
-                doc.text(`OTR Kita: ${formatRupiah(otrKitaNum)}`, 20, yPosition);
+                doc.text(`OTR Kita: ${kendaraan.otrKita}`, 25, yPosition);
                 yPosition += 8;
                 
-                doc.text(`TDP: ${formatRupiah(tdpNum)}`, 20, yPosition);
+                doc.text(`TDP: ${kendaraan.tdp}`, 25, yPosition);
                 yPosition += 8;
                 
-                doc.text(`Angsuran: ${formatRupiah(angsuranNum)}`, 20, yPosition);
-                yPosition += 12;
-                
-                // Hasil Perhitungan
-                doc.setFont(undefined, 'bold');
-                doc.text("Hasil Perhitungan:", 15, yPosition);
-                yPosition += 8;
-                
-                doc.setFont(undefined, 'normal');
-                doc.text(`Hasil 1 (OTR Leasing - OTR Kita): ${formatRupiah(hasil1Num)}`, 20, yPosition);
-                yPosition += 8;
-                
-                doc.text(`DP (TDP - Hasil 1): ${formatRupiah(dpNum)}`, 20, yPosition);
+                doc.text(`Angsuran: ${kendaraan.angsuran}`, 25, yPosition);
                 yPosition += 15;
+                
+                // Hasil Perhitungan - hanya DP dan Angsuran
+                doc.setFont(undefined, 'bold');
+                doc.text("HASIL PERHITUNGAN:", 20, yPosition);
+                yPosition += 8;
+                
+                doc.setFont(undefined, 'normal');
+                // DP
+                doc.setTextColor(60, 120, 60);
+                doc.text(`DP (TDP - Hasil 1):`, 25, yPosition);
+                doc.setTextColor(30, 30, 30);
+                doc.text(`${kendaraan.dp}`, 80, yPosition);
+                yPosition += 8;
+                
+                // Angsuran
+                doc.setTextColor(60, 120, 60);
+                doc.text(`Angsuran:`, 25, yPosition);
+                doc.setTextColor(30, 30, 30);
+                doc.text(`${kendaraan.angsuran}`, 80, yPosition);
+                yPosition += 15;
+                
+                // Garis pemisah antar kendaraan
+                doc.setDrawColor(220, 220, 220);
+                doc.line(15, yPosition, 195, yPosition);
+                yPosition += 10;
             });
             
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Halaman ${i} dari ${pageCount}`, 105, 285, { align: "center" });
+                doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 290, { align: "center" });
+            }
+            
             // Simpan PDF
-            doc.save(`Kalkulasi_${currentDetailData.namaKelompok}_${new Date().toISOString().slice(0, 10)}.pdf`);
+            doc.save(`Laporan_${currentDetailData.namaKelompok}_${new Date().toISOString().slice(0, 10)}.pdf`);
         }
         
         // Fungsi untuk menghapus data tersimpan
