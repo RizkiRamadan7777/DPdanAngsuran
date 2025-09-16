@@ -218,18 +218,8 @@
             position: relative;
         }
         
-        .currency-input::before {
-            content: "Rp";
-            position: absolute;
-            left: 10px;
-            top: 10px;
-            font-weight: bold;
-            color: #777;
-            font-size: 14px;
-        }
-        
         .currency-input input {
-            padding-left: 35px;
+            padding-left: 10px;
         }
         
         .kendaraan-header {
@@ -595,7 +585,7 @@
                         </div>
                         <div class="calculation-row">
                             <span class="calculation-label">Hasil 1 (OTR Leasing - OTR Kita)</span>
-                            <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">Rp 0</span>
+                            <span class="calculation-value" id="hasil-1-${kelompokId}-${kendaraanId}">0</span>
                         </div>
                     </div>
                     <div class="kendaraan-side side-right">
@@ -607,11 +597,11 @@
                         </div>
                         <div class="calculation-row">
                             <span class="calculation-label">Hasil 1</span>
-                            <span class="calculation-value" id="hasil-1-kanan-${kelompokId}-${kendaraanId}">Rp 0</span>
+                            <span class="calculation-value" id="hasil-1-kanan-${kelompokId}-${kendaraanId}">0</span>
                         </div>
                         <div class="calculation-row">
                             <span class="calculation-label">DP (TDP - Hasil 1)</span>
-                            <span class="calculation-value" id="dp-${kelompokId}-${kendaraanId}">Rp 0</span>
+                            <span class="calculation-value" id="dp-${kelompokId}-${kendaraanId}">0</span>
                         </div>
                     </div>
                 </div>
@@ -657,12 +647,19 @@
             
             // Hitung hasil 1 (selisih OTR)
             const hasil1 = otrLeasing - otrKita;
-            document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
-            document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(hasil1);
+            document.getElementById(`hasil-1-${kelompokId}-${kendaraanId}`).textContent = formatNumber(hasil1);
+            document.getElementById(`hasil-1-kanan-${kelompokId}-${kendaraanId}`).textContent = formatNumber(hasil1);
             
             // Hitung DP (TDP - hasil1)
             const dp = tdp - hasil1;
-            document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent = formatRupiah(dp);
+            document.getElementById(`dp-${kelompokId}-${kendaraanId}`).textContent = formatNumber(dp);
+        }
+        
+        // Fungsi untuk format angka dengan pemisah ribuan
+        function formatNumber(angka) {
+            if (isNaN(angka)) return '0';
+            
+            return new Intl.NumberFormat('id-ID').format(angka);
         }
         
         // Fungsi untuk format mata uang Rupiah
@@ -683,9 +680,9 @@
                     // Hapus semua karakter non-digit
                     let value = this.value.replace(/[^0-9]/g, '');
                     
-                    // Format sebagai Rupiah
+                    // Format sebagai angka dengan pemisah ribuan
                     if (value) {
-                        this.value = formatRupiah(value);
+                        this.value = formatNumber(value);
                     } else {
                         this.value = '';
                     }
@@ -873,6 +870,14 @@
             `;
             
             data.kendaraanData.forEach((kendaraan, kIndex) => {
+                // Konversi nilai string ke angka untuk perhitungan
+                const otrLeasingNum = parseFloat(kendaraan.otrLeasing.replace(/[^0-9]/g, '')) || 0;
+                const otrKitaNum = parseFloat(kendaraan.otrKita.replace(/[^0-9]/g, '')) || 0;
+                const tdpNum = parseFloat(kendaraan.tdp.replace(/[^0-9]/g, '')) || 0;
+                const angsuranNum = parseFloat(kendaraan.angsuran.replace(/[^0-9]/g, '')) || 0;
+                const hasil1Num = parseFloat(kendaraan.hasil1.replace(/[^0-9]/g, '')) || 0;
+                const dpNum = parseFloat(kendaraan.dp.replace(/[^0-9]/g, '')) || 0;
+                
                 detailHTML += `
                     <div class="detail-kendaraan">
                         <h4>Kendaraan ${kIndex + 1}: ${kendaraan.kendaraan}</h4>
@@ -880,15 +885,15 @@
                         <div class="detail-grid">
                             <div class="detail-side">
                                 <h5>Data Input</h5>
-                                <p><strong>OTR Leasing:</strong> ${kendaraan.otrLeasing}</p>
-                                <p><strong>OTR Kita:</strong> ${kendaraan.otrKita}</p>
-                                <p><strong>TDP:</strong> ${kendaraan.tdp}</p>
-                                <p><strong>Angsuran:</strong> ${kendaraan.angsuran}</p>
+                                <p><strong>OTR Leasing:</strong> ${formatRupiah(otrLeasingNum)}</p>
+                                <p><strong>OTR Kita:</strong> ${formatRupiah(otrKitaNum)}</p>
+                                <p><strong>TDP:</strong> ${formatRupiah(tdpNum)}</p>
+                                <p><strong>Angsuran:</strong> ${formatRupiah(angsuranNum)}</p>
                             </div>
                             <div class="detail-side">
                                 <h5>Hasil Perhitungan</h5>
-                                <p><strong>Hasil 1 (OTR Leasing - OTR Kita):</strong> ${kendaraan.hasil1}</p>
-                                <p><strong>DP (TDP - Hasil 1):</strong> ${kendaraan.dp}</p>
+                                <p><strong>Hasil 1 (OTR Leasing - OTR Kita):</strong> ${formatRupiah(hasil1Num)}</p>
+                                <p><strong>DP (TDP - Hasil 1):</strong> ${formatRupiah(dpNum)}</p>
                             </div>
                         </div>
                     </div>
@@ -925,6 +930,14 @@
                     yPosition = 20;
                 }
                 
+                // Konversi nilai string ke angka untuk perhitungan
+                const otrLeasingNum = parseFloat(kendaraan.otrLeasing.replace(/[^0-9]/g, '')) || 0;
+                const otrKitaNum = parseFloat(kendaraan.otrKita.replace(/[^0-9]/g, '')) || 0;
+                const tdpNum = parseFloat(kendaraan.tdp.replace(/[^0-9]/g, '')) || 0;
+                const angsuranNum = parseFloat(kendaraan.angsuran.replace(/[^0-9]/g, '')) || 0;
+                const hasil1Num = parseFloat(kendaraan.hasil1.replace(/[^0-9]/g, '')) || 0;
+                const dpNum = parseFloat(kendaraan.dp.replace(/[^0-9]/g, '')) || 0;
+                
                 doc.setFontSize(14);
                 doc.text(`Kendaraan ${index + 1}: ${kendaraan.kendaraan}`, 15, yPosition);
                 yPosition += 10;
@@ -940,16 +953,16 @@
                 yPosition += 8;
                 
                 doc.setFont(undefined, 'normal');
-                doc.text(`OTR Leasing: ${kendaraan.otrLeasing}`, 20, yPosition);
+                doc.text(`OTR Leasing: ${formatRupiah(otrLeasingNum)}`, 20, yPosition);
                 yPosition += 8;
                 
-                doc.text(`OTR Kita: ${kendaraan.otrKita}`, 20, yPosition);
+                doc.text(`OTR Kita: ${formatRupiah(otrKitaNum)}`, 20, yPosition);
                 yPosition += 8;
                 
-                doc.text(`TDP: ${kendaraan.tdp}`, 20, yPosition);
+                doc.text(`TDP: ${formatRupiah(tdpNum)}`, 20, yPosition);
                 yPosition += 8;
                 
-                doc.text(`Angsuran: ${kendaraan.angsuran}`, 20, yPosition);
+                doc.text(`Angsuran: ${formatRupiah(angsuranNum)}`, 20, yPosition);
                 yPosition += 12;
                 
                 // Hasil Perhitungan
@@ -958,10 +971,10 @@
                 yPosition += 8;
                 
                 doc.setFont(undefined, 'normal');
-                doc.text(`Hasil 1 (OTR Leasing - OTR Kita): ${kendaraan.hasil1}`, 20, yPosition);
+                doc.text(`Hasil 1 (OTR Leasing - OTR Kita): ${formatRupiah(hasil1Num)}`, 20, yPosition);
                 yPosition += 8;
                 
-                doc.text(`DP (TDP - Hasil 1): ${kendaraan.dp}`, 20, yPosition);
+                doc.text(`DP (TDP - Hasil 1): ${formatRupiah(dpNum)}`, 20, yPosition);
                 yPosition += 15;
             });
             
